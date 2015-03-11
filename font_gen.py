@@ -1,63 +1,102 @@
-def generate_font_map():
-    toncfontTiles = [
-        0x00000000, 0x00000000, 0x18181818, 0x00180018, 0x00003636, 0x00000000,
-        0x367F3636, 0x0036367F, 0x3C067C18, 0x00183E60, 0x1B356600, 0x0033566C,
-        0x6E16361C, 0x00DE733B, 0x000C1818, 0x00000000, 0x0C0C1830, 0x0030180C,
-        0x3030180C, 0x000C1830, 0xFF3C6600, 0x0000663C, 0x7E181800, 0x00001818,
-        0x00000000, 0x0C181800, 0x7E000000, 0x00000000, 0x00000000, 0x00181800,
-        0x183060C0, 0x0003060C, 0x7E76663C, 0x003C666E, 0x181E1C18, 0x00181818,
-        0x3060663C, 0x007E0C18, 0x3860663C, 0x003C6660, 0x33363C38, 0x0030307F,
-        0x603E067E, 0x003C6660, 0x3E060C38, 0x003C6666, 0x3060607E, 0x00181818,
-        0x3C66663C, 0x003C6666, 0x7C66663C, 0x001C3060, 0x00181800, 0x00181800,
-        0x00181800, 0x0C181800, 0x06186000, 0x00006018, 0x007E0000, 0x0000007E,
-        0x60180600, 0x00000618, 0x3060663C, 0x00180018, 0x5A5A663C, 0x003C067A,
-        0x7E66663C, 0x00666666, 0x3E66663E, 0x003E6666, 0x06060C78, 0x00780C06,
-        0x6666361E, 0x001E3666, 0x1E06067E, 0x007E0606, 0x1E06067E, 0x00060606,
-        0x7606663C, 0x007C6666, 0x7E666666, 0x00666666, 0x1818183C, 0x003C1818,
-        0x60606060, 0x003C6660, 0x0F1B3363, 0x0063331B, 0x06060606, 0x007E0606,
-        0x6B7F7763, 0x00636363, 0x7B6F6763, 0x00636373, 0x6666663C, 0x003C6666,
-        0x3E66663E, 0x00060606, 0x3333331E, 0x007E3B33, 0x3E66663E, 0x00666636,
-        0x3C0E663C, 0x003C6670, 0x1818187E, 0x00181818, 0x66666666, 0x003C6666,
-        0x66666666, 0x00183C3C, 0x6B636363, 0x0063777F, 0x183C66C3, 0x00C3663C,
-        0x183C66C3, 0x00181818, 0x0C18307F, 0x007F0306, 0x0C0C0C3C, 0x003C0C0C,
-        0x180C0603, 0x00C06030, 0x3030303C, 0x003C3030, 0x00663C18, 0x00000000,
-        0x00000000, 0x003F0000, 0x00301818, 0x00000000, 0x603C0000, 0x007C667C,
-        0x663E0606, 0x003E6666, 0x063C0000, 0x003C0606, 0x667C6060, 0x007C6666,
-        0x663C0000, 0x003C067E, 0x0C3E0C38, 0x000C0C0C, 0x667C0000, 0x3C607C66,
-        0x663E0606, 0x00666666, 0x18180018, 0x00301818, 0x30300030, 0x1E303030,
-        0x36660606, 0x0066361E, 0x18181818, 0x00301818, 0x7F370000, 0x0063636B,
-        0x663E0000, 0x00666666, 0x663C0000, 0x003C6666, 0x663E0000, 0x06063E66,
-        0x667C0000, 0x60607C66, 0x663E0000, 0x00060606, 0x063C0000, 0x003E603C,
-        0x0C3E0C0C, 0x00380C0C, 0x66660000, 0x007C6666, 0x66660000, 0x00183C66,
-        0x63630000, 0x00367F6B, 0x36630000, 0x0063361C, 0x66660000, 0x0C183C66,
-        0x307E0000, 0x007E0C18, 0x0C181830, 0x00301818, 0x18181818, 0x00181818,
-        0x3018180C, 0x000C1818, 0x003B6E00, 0x00000000, 0x00000000,
-        0x00000000, ]
+"""Font ROMs for use in the Verilog Text Maker."""
 
-    orig = toncfontTiles
-    pixels = [
-        hex(orig[x + 1])[2:].zfill(8) + hex(orig[x])[2:].zfill(8)
-        for x in range(0, len(orig),
-                       2)]
+class BasicFontRom(object):
 
-    for k in range(len(pixels)):
-        pixels[k] = [pixels[k][x:x + 2] for x in range(0, len(pixels[k]), 2)]
+    """ Basic 8x8 font ROM. Has an NES look-and-feel. Entries in the font ROM
+    can be converted into 2-D pixel arrays by converting them to binary
+    and scanning them from left to right, up to down. A properly-mapped sprite
+    would be:
+                            VALUE[63:56]
+                            VALUE[55:48]
+                            VALUE[47:40]
+                            VALUE[39:32]
+                            VALUE[31:24]
+                            VALUE[23:16]
+                            VALUE[15:8]
+                            VALUE[7:0]
+    """
 
-    for k, entry in enumerate(pixels):
-        for x in range(len(pixels[k])):
-            pixels[k][x] = bin(int(pixels[k][x], 16))[2:].zfill(8)
+    def __init__(self):
+        self.font_rom = [
+            0x0000000000000000, 0x1818181818001800, 0x6c6c000000000000,
+            0x6c6cfe6cfe6c6c00, 0x183e603c067c1800, 0x0066acd8366acc00,
+            0x386c6876dcce7b00, 0x1818300000000000, 0x0c18303030180c00,
+            0x30180c0c0c183000, 0x00663cff3c660000, 0x0018187e18180000,
+            0x0000000000181830, 0x0000007e00000000, 0x0000000000181800,
+            0x03060c183060c000, 0x3c666e7e76663c00, 0x1838781818181800,
+            0x3c66060c18307e00, 0x3c66061c06663c00, 0x1c3c6cccfe0c0c00,
+            0x7e607c0606663c00, 0x1c30607c66663c00, 0x7e06060c18181800,
+            0x3c66663c66663c00, 0x3c66663e060c3800, 0x0018180000181800,
+            0x0018180000181830, 0x0006186018060000, 0x00007e007e000000,
+            0x0060180618600000, 0x3c66060c18001800, 0x3c665a5a5e603c00,
+            0x3c66667e66666600, 0x7c66667c66667c00, 0x1e30606060301e00,
+            0x786c6666666c7800, 0x7e60607860607e00, 0x7e60607860606000,
+            0x3c66606e66663e00, 0x6666667e66666600, 0x3c18181818183c00,
+            0x0606060606663c00, 0xc6ccd8f0d8ccc600, 0x6060606060607e00,
+            0xc6eefed6c6c6c600, 0xc6e6f6decec6c600, 0x3c66666666663c00,
+            0x7c66667c60606000, 0x78ccccccccdc7e00, 0x7c66667c6c666600,
+            0x3c66703c0e663c00, 0x7e18181818181800, 0x6666666666663c00,
+            0x666666663c3c1800, 0xc6c6c6d6feeec600, 0xc3663c183c66c300,
+            0xc3663c1818181800, 0xfe0c183060c0fe00, 0x3c30303030303c00,
+            0xc06030180c060300, 0x3c0c0c0c0c0c3c00, 0x183c660000000000,
+            0x000000000000fc00, 0x18180c0000000000, 0x00003c063e663e00,
+            0x60607c6666667c00, 0x00003c6060603c00, 0x06063e6666663e00,
+            0x00003c667e603c00, 0x1c307c3030303000, 0x00003e66663e063c,
+            0x60607c6666666600, 0x1800181818180c00, 0x0c000c0c0c0c0c78,
+            0x6060666c786c6600, 0x1818181818180c00, 0x0000ecfed6c6c600,
+            0x00007c6666666600, 0x00003c6666663c00, 0x00007c66667c6060,
+            0x00003e66663e0606, 0x00007c6660606000, 0x00003c603c067c00,
+            0x30307c3030301c00, 0x0000666666663e00, 0x00006666663c1800,
+            0x0000c6c6d6fe6c00, 0x0000c66c386cc600, 0x00006666663c1830,
+            0x00007e0c18307e00, 0x0c18183018180c00, 0x1818181818181800,
+            0x3018180c18183000, 0x0076dc0000000000, 0x0000000000000000
+        ]
 
-    for k, entry in enumerate(pixels):
-        for x in range(len(pixels[k])):
-            pixels[k][x] = pixels[k][x][::-1].replace('0',' ')
+    def display_char(self, char):
+        """ Returns a pixelized display of an ASCII character. Only characters
+        ' ' through '~' are supported. """
 
-    for k, entry in enumerate(pixels):
-        pixels[k] = pixels[k][::-1]
+        rom_entry = ord(char) - ord(' ')
+        return self.generate_pixels(rom_entry)
+
+    def generate_pixels(self, entry, lookup = True):
+        """ Generates a pixelized display of one entry in the font ROM. Active
+        pixels are represented as '1', and inactive pixels are represented as
+        ' '. If 'lookup' is true, the 'entry' value represents an index into
+        the ROM table. If 'lookup' is false, 'entry' represents the 64-bit
+        unsigned integer constant. """
+
+        if lookup:
+            value = self.font_rom[entry]
+        else:
+            value = entry
+        
+        value = bin(value)[2:].zfill(64)
+        value = value.replace('0', ' ')
+        pixels = [value[x:x + 8] for x in range(0, 64, 8)]
+        return pixels
+
+    def display_entry(self, char):
+        """ Returns the ROM entry that corresponds with target character. """
+
+        entry = ord(char) - ord(' ')
+        return self.font_rom[entry]
     
-    chars = [chr(ord(' ') + x) for x in range(95)] + [' ']
-    return chars, pixels
-    
+    def custom_rom(self, string):
+        """ Creates a custom ROM that only contains the necessary characters 
+        to produce a given input string. Returns the custom ROM, and also
+        an list of indexes into the ROM for each character in the input
+        string. """
+        
+        unique_chars = set(string)
+        unique_chars = list(unique_chars)
+        unique_chars.sort()
+        custom_rom = [self.font_rom[ord(x) - ord(' ')] for x in unique_chars]
+        
+        rom_index = []
+        
+        for x in string:
+            rom_index.append(unique_chars.index(x))
+        
+        return custom_rom, rom_index
 
-def make_map(x):
-    chars, pixels = generate_font_map()
-    return pixels[ord(x) - ord(' ')] 
